@@ -10,6 +10,7 @@ import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -34,7 +35,7 @@ public class ClienteService implements iClienteService {
             O retorno deste método deverá ser apenas um integer que represente a idade deste cliente.
          */
 
-        return 0;
+        return (int) ChronoUnit.YEARS.between(cliente.getDataNascimento(), LocalDate.now());
     }
 
     @Override
@@ -72,9 +73,14 @@ public class ClienteService implements iClienteService {
             o nome do cliente encontrado. Caso contrário, devolver uma mensagem de erro avisando que não existe ninguém com o código informado.
          */
 
-        Cliente cliente = clienteRepository.findById(codigo).get();
+        Optional<Cliente> optionalCliente = clienteRepository.findById(codigo);
+        String nomeCliente = "Cliente inexistente";
+        if(optionalCliente.isPresent()) {
+            Cliente cliente = clienteRepository.findById(codigo).get();
+            nomeCliente = cliente.getNome();
+        }
 
-        return cliente.getNome();
+        return nomeCliente;
     }
 
     @Override
@@ -91,7 +97,10 @@ public class ClienteService implements iClienteService {
                 - quantidade máxima de clientes na lista: 3
          */
 
-        return listaClientes;
+        return listaClientes.stream().filter(x -> x.getGenero() == 'F')
+                .filter(x -> ChronoUnit.YEARS.between(x.getDataNascimento(), LocalDate.now()) >= 30)
+                .limit(3)
+                .collect(Collectors.toList());
     }
 
     @Override
@@ -100,17 +109,24 @@ public class ClienteService implements iClienteService {
         /*
             URL: http://localhost:8080/v1/clientes/bug
 
-            Este método deveria listar todos os dados dos clientes ordenados em ordem decrescente pela quantidade de visitas limitados em até 3 resultados,
-            porém não é isso que está acontecendo. Verifique se as implementações abaixo estão corretas e, se necessário, faça as modificações que julgar apropriadas.
+            Este método deveria listar todos os dados dos clientes ordenados em ordem decrescente pela quantidade de
+            visitas limitados em até 3 resultados, porém não é isso que está acontecendo.
+            Verifique se as implementações abaixo estão corretas e, se necessário, faça as modificações que julgar apropriadas.
          */
 
         List<Cliente> listaClientes = clienteRepository.findAll();
 
-        listaClientes.stream().skip(3)
-                .sorted(Comparator.comparingInt(Cliente::getQuantidadeVisistas))
-                .map(x -> { return new Cliente(listaClientes.get(0).getCodigo(), listaClientes.get(0).getNome(), listaClientes.get(0).getDataNascimento(), listaClientes.get(0).getGenero(), listaClientes.get(0).getQuantidadeVisistas()); })
-                .collect(Collectors.toList());
 
-        return listaClientes;
+        //    listaClientes.stream().skip(3)
+        //        .sorted(Comparator.comparingInt(Cliente::getQuantidadeVisistas))
+        //        .map(x -> { return new Cliente(listaClientes.get(0).getCodigo(), listaClientes.get(0).getNome(), listaClientes.get(0).getDataNascimento(), listaClientes.get(0).getGenero(), listaClientes.get(0).getQuantidadeVisistas()); })
+        //        .collect(Collectors.toList());
+
+
+        return listaClientes.stream()
+                .sorted(Comparator.comparingInt(Cliente::getQuantidadeVisistas)
+                .reversed())
+                .limit(3)
+                .collect(Collectors.toList());
     }
 }
