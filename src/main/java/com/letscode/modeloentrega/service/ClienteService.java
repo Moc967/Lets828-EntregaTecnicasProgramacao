@@ -7,7 +7,6 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
-import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
@@ -41,8 +40,6 @@ public class ClienteService implements iClienteService {
     @Override
     public List<String> listarNomesClientes() {
 
-        List<Cliente> listaClientes = clienteRepository.findAll();
-
         /*
             URL: http://localhost:8080/v1/clientes/listar
 
@@ -53,13 +50,15 @@ public class ClienteService implements iClienteService {
             Considere que a consulta acima já retorna uma lista completa com todos os clientes existentes.
          */
 
-        List<String> listaNomes = new ArrayList<>();
+//        List<String> listaNomes = new ArrayList<>();
+//
+//        for (int i = 0; i < listaClientes.size(); i++) {
+//            listaNomes.add(listaClientes.get(i).getNome().toUpperCase());
+//        }
 
-        for (int i = 0; i < listaClientes.size(); i++) {
-            listaNomes.add(listaClientes.get(i).getNome().toUpperCase());
-        }
-
-        return listaNomes;
+        return clienteRepository.findAll().stream()
+                .map(x -> x.getNome().toUpperCase())
+                .collect(Collectors.toList());
     }
 
     @Override
